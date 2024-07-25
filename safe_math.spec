@@ -29,10 +29,10 @@ rule safe_sub {
 
     uint256 vres = safe_sub@withrevert(a, b);
 
-    if (cres < 0) {
-        assert lastReverted;
-    } else {
+    if (cres >= 0) {
         assert vres == assert_uint256(cres);
+    } else {
+        assert lastReverted;
     }
 }
 
@@ -41,11 +41,11 @@ rule safe_div {
 
     uint256 vres = safe_div@withrevert(a, b);
 
-    if (b == 0) {
-        assert lastReverted;
-    } else {
+    if (b != 0) {
         mathint cres = a / b;
         assert vres == assert_uint256(cres);
+    } else {
+        assert lastReverted;
     }
 }
 
@@ -66,26 +66,26 @@ rule safe_mul {
 rule safe_mod {
     uint256 a; uint256 b;
 
-    uint256 vres = safe_mul@withrevert(a, b);
+    uint256 vres = safe_modulo@withrevert(a, b);
 
-    if (b == 0) {
-        assert lastReverted;
-    } else {
+    if (b != 0) {
         mathint cres = a % b;
         assert vres == assert_uint256(cres);
+    } else {
+        assert lastReverted;
     }
 }
 
 rule safe_exp {
     uint256 b;
 
-    mathint cres = 2 ^ b; 
+    mathint cres = 1 << b; 
 
     uint256 vres = safe_exp_base2@withrevert(b);
 
-    if (cres > max_uint256) {
-        assert lastReverted;
-    } else {
+    if (cres <= max_uint256) {
         assert vres == assert_uint256(cres);
+    } else {
+        assert lastReverted;
     }
 }
