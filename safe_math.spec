@@ -3,6 +3,8 @@ methods {
     function safe_sub(uint256 x, uint256 y) external returns(uint256) envfree;
     function safe_div(uint256 x, uint256 y) external returns(uint256) envfree;
     function safe_mul(uint256 x, uint256 y) external returns(uint256) envfree;
+    function safe_modulo(uint256 x, uint256 y) external returns(uint256) envfree;
+    function safe_exp_base2(uint256 y) external returns(uint256) envfree;
 }
 
 
@@ -15,8 +17,6 @@ rule safe_add {
 
     if (cres <= max_uint256) {
         assert vres == assert_uint256(cres);
-        assert vres >= a;
-        assert vres >= b;
     } else {
         assert lastReverted;
     }
@@ -33,7 +33,6 @@ rule safe_sub {
         assert lastReverted;
     } else {
         assert vres == assert_uint256(cres);
-        assert vres <= a;
     }
 }
 
@@ -47,7 +46,6 @@ rule safe_div {
     } else {
         mathint cres = a / b;
         assert vres == assert_uint256(cres);
-        assert vres <= a;
     }
 }
 
@@ -60,13 +58,34 @@ rule safe_mul {
 
     if (cres <= max_uint256) {
         assert vres == assert_uint256(cres);
-        if (a != 0 && b != 0) {
-            assert vres >= a;
-            assert vres >= b;
-        } else {
-            assert vres == 0;
-        }
     } else {
         assert lastReverted;
+    }
+}
+
+rule safe_mod {
+    uint256 a; uint256 b;
+
+    uint256 vres = safe_mul@withrevert(a, b);
+
+    if (b == 0) {
+        assert lastReverted;
+    } else {
+        mathint cres = a % b;
+        assert vres == assert_uint256(cres);
+    }
+}
+
+rule safe_exp {
+    uint256 b;
+
+    mathint cres = 2 ^ b; 
+
+    uint256 vres = safe_exp_base2@withrevert(b);
+
+    if (cres > max_uint256) {
+        assert lastReverted;
+    } else {
+        assert vres == assert_uint256(cres);
     }
 }
