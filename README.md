@@ -15,3 +15,7 @@
 - create invariants for all operators
 - prove the correctness of the spec using Certora Prover
 - and prove their correctness against 
+
+## Usafge
+- `export CERTORAKEY=your_key`
+- to run the tests: `certoraRun config.conf`
