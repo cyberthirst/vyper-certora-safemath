@@ -29,3 +29,4 @@ def safe_modulo(x: uint256, y: uint256) -> uint256:
 @pure
 def safe_exp_base2(y: uint256) -> uint256:
     return 2 ** y
+
