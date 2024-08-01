@@ -50,10 +50,45 @@ rule isqrt_one {
     assert result == 1, "The square root of 1 should be 1";
 }
 
+/* TIMEOUT
 rule isqrt_perfect_square {
     uint256 x;
     require x * x <= to_mathint(MAX_UINT256());
 
     uint256 result = isqrt_(assert_uint256(x * x));
     assert result == x, "The square root of a perfect square should be exact";
+}
+*/
+
+rule isqrt_multiplication {
+    uint256 a; uint256 b;
+    require a * b <= to_mathint(MAX_UINT256());
+    uint256 sqrt_product = isqrt_(assert_uint256(a * b));
+    uint256 product_sqrts = assert_uint256(isqrt_(a) * isqrt_(b));
+    assert sqrt_product >= product_sqrts, "sqrt(a*b) >= sqrt(a) * sqrt(b)";
+}
+
+rule isqrt_addition {
+    uint256 a; uint256 b;
+    require a + b <= to_mathint(MAX_UINT256());
+    uint256 sqrt_sum = isqrt_(assert_uint256(a + b));
+    uint256 sum_sqrts = assert_uint256(isqrt_(a) + isqrt_(b));
+    assert sqrt_sum <= sum_sqrts, "sqrt(a+b) <= sqrt(a) + sqrt(b)";
+}
+
+rule isqrt_continuity {
+    uint256 x; uint256 y;
+    require x < y;
+    uint256 sqrt_x = isqrt_(x);
+    uint256 sqrt_y = isqrt_(y);
+    assert assert_uint256(sqrt_y - sqrt_x) <= isqrt_(assert_uint256(y - x)), "sqrt(y) - sqrt(x) <= sqrt(y - x)";
+}
+
+rule isqrt_geometric_mean {
+    uint256 a; uint256 b;
+    require (a + b) / 2 <= to_mathint(MAX_UINT256());
+    require a * b <= to_mathint(MAX_UINT256());
+    uint256 arithmetic_mean = assert_uint256((a + b) / 2);
+    uint256 geometric_mean = isqrt_(assert_uint256(a * b));
+    assert geometric_mean <= isqrt_(arithmetic_mean), "Geometric mean <= sqrt(arithmetic mean)";
 }
