@@ -4,20 +4,30 @@ methods {
 
 definition MAX_UINT256() returns uint256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
 
-ghost sqrt_ghost(uint256) returns mathint {
-    axiom forall uint256 x. sqrt_ghost(x) * sqrt_ghost(x) <= to_mathint(x) && (sqrt_ghost(x) + 1) * (sqrt_ghost(x) + 1) > to_mathint(x);
-}
 
-rule verify_isqrt {
+rule result_is_max_half_maxuint256 {
     uint256 y;
 
     uint256 result = isqrt_(y);
 
-    assert to_mathint(result) == sqrt_ghost(y), "The result should be equal to the ghost function result";
+    assert to_mathint(result) <= to_mathint(MAX_UINT256()) / 2, "The result should not exceed half of MAX_UINT256";
+}
+
+rule result_square_check {
+    uint256 y;
+
+    uint256 result = isqrt_(y);
 
     assert to_mathint(result) * to_mathint(result) <= to_mathint(y), "The square of the result should not exceed the input";
+}
 
-    assert to_mathint(result) <= to_mathint(MAX_UINT256()) / 2, "The result should not exceed half of MAX_UINT256";
+
+rule result_square_check2{
+    uint256 y;
+
+    uint256 result = isqrt_(y);
+
+    assert (to_mathint(result) + 1) * (to_mathint(result) + 1) > to_mathint(y), "The square of the (result + 1) should exceed the input";
 }
 
 rule isqrt_monotonicity {
