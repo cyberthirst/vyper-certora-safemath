@@ -1,113 +1,49 @@
 methods {
-    function safe_add(uint256 x, uint256 y) external returns(uint256) envfree;
-    function safe_sub(uint256 x, uint256 y) external returns(uint256) envfree;
-    function safe_div(uint256 x, uint256 y) external returns(uint256) envfree;
-    function safe_mul(uint256 x, uint256 y) external returns(uint256) envfree;
-    function safe_modulo(uint256 x, uint256 y) external returns(uint256) envfree;
-    function safe_exp_base2(uint256 y) external returns(uint256) envfree;
-    function isqrt_y(uint256 y) external returns(uint256) envfree;
+    function isqrt_(uint256 y) external returns(uint256) envfree;
 }
 
+definition MAX_UINT256() returns uint256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
 
-rule safe_add {
-    uint256 a; uint256 b;
-
-    mathint cres = a + b; 
-
-    uint256 vres = safe_add@withrevert(a, b);
-
-    if (cres <= max_uint256) {
-        assert vres == assert_uint256(cres);
-    } else {
-        assert lastReverted;
-    }
+ghost sqrt_ghost(uint256) returns mathint {
+    axiom forall uint256 x. sqrt_ghost(x) * sqrt_ghost(x) <= to_mathint(x) && (sqrt_ghost(x) + 1) * (sqrt_ghost(x) + 1) > to_mathint(x);
 }
 
-rule safe_sub {
-    uint256 a; uint256 b;
+rule verify_isqrt {
+    uint256 y;
 
-    mathint cres = a - b; 
+    uint256 result = isqrt_(y);
 
-    uint256 vres = safe_sub@withrevert(a, b);
+    assert to_mathint(result) == sqrt_ghost(y), "The result should be equal to the ghost function result";
 
-    if (cres >= 0) {
-        assert vres == assert_uint256(cres);
-    } else {
-        assert lastReverted;
-    }
+    assert to_mathint(result) * to_mathint(result) <= to_mathint(y), "The square of the result should not exceed the input";
+
+    assert to_mathint(result) <= to_mathint(MAX_UINT256()) / 2, "The result should not exceed half of MAX_UINT256";
 }
 
-rule safe_div {
-    uint256 a; uint256 b;
+rule isqrt_monotonicity {
+    uint256 x; uint256 y;
+    require x < y;
 
-    uint256 vres = safe_div@withrevert(a, b);
+    uint256 result_x = isqrt_(x);
+    uint256 result_y = isqrt_(y);
 
-    if (b != 0) {
-        mathint cres = a / b;
-        assert vres == assert_uint256(cres);
-    } else {
-        assert lastReverted;
-    }
+    assert result_x <= result_y, "The square root function should be monotonically increasing";
 }
 
-rule safe_mul {
-    uint256 a; uint256 b;
-
-    mathint cres = a * b; 
-
-    uint256 vres = safe_mul@withrevert(a, b);
-
-    if (cres <= max_uint256) {
-        assert vres == assert_uint256(cres);
-    } else {
-        assert lastReverted;
-    }
+rule isqrt_zero {
+    uint256 result = isqrt_(0);
+    assert result == 0, "The square root of 0 should be 0";
 }
 
-rule safe_mod {
-    uint256 a; uint256 b;
-
-    uint256 vres = safe_modulo@withrevert(a, b);
-
-    if (b != 0) {
-        mathint cres = a % b;
-        assert vres == assert_uint256(cres);
-    } else {
-        assert lastReverted;
-    }
+rule isqrt_one {
+    uint256 result = isqrt_(1);
+    assert result == 1, "The square root of 1 should be 1";
 }
 
-function power(uint256 base, uint256 exp) returns uint256 {
-    uint256 i, result = 1;
-    for (i = 0; i < exp; i++)
-        result *= base;
-    return result;
-}
+rule isqrt_perfect_square {
+    uint256 x;
+    require x * x <= to_mathint(MAX_UINT256());
 
-rule safe_exp_base2 {
-    uint256 b;
-
-    mathint cres = 1 << b; 
-
-    uint256 vres = safe_exp_base2@withrevert(b);
-
-    if (cres <= max_uint256) {
-        assert vres == assert_uint256(cres);
-    } else {
-        assert lastReverted;
-    }
-}
-
-rule safe_exp_general {
-    uint256 base, exp;
-
-    mathint cres = power(base, exp);
-
-    uint256 vres = safe_exp_base2@withrevert(b);
-
-    if (cres <= max_uint256) {
-        assert vres == assert_uint256(cres);
-    } else {
-        assert lastReverted;
-    }
+    uint256 result = isqrt_(assert_uint256(x * x));
+    assert result == x, "The square root of a perfect square should be exact";
 }
